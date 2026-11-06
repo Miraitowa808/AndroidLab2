@@ -82,15 +82,32 @@ fun InspectionScreen(controller: InspectionController, onBack: () -> Unit) {
                 }
                 LoadPhase.SUCCESS -> {
                     // TODO 3：从任务列表计算已完成数量，不能写死。
-                    val done = 0
+                   // val done = 0  改这个内容，把这个值改成有意义的
+                    val done = state.tasks.count { it.status == "已完成" }//任务3内容
+
                     Text("${controller.room} · 共${state.tasks.size}项 · 待巡检${state.tasks.size - done}项 · 已完成${done}项",
                         modifier = Modifier.testTag("summary"), style = MaterialTheme.typography.titleSmall)
                     // TODO 6：增加“全部／仅看待巡检”按钮，更新pendingOnly。
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(selected = !pendingOnly, onClick = { pendingOnly = false }, label = { Text("全部") })
+                        FilterChip(selected = pendingOnly, onClick = { pendingOnly = true }, label = { Text("仅看待巡检") })
+                    }
+                    val visibleTasks = if (pendingOnly) state.tasks.filter { it.status == "待巡检" } else state.tasks
+                    Text("当前显示 ${visibleTasks.size} 项")
                     // 根据pendingOnly筛选state.tasks，计算visibleTasks，并显示当前显示数量。
                     // 此处起点直接使用全部数据；完成后A203仅待巡检为5项，A204为1项。
-                    val visibleTasks = state.tasks
+
                     // TODO 4：使用LazyColumn、items和InspectionTaskCard展示visibleTasks。
-                    Text("TODO 4：请在此显示任务列表")
+                    //把数据用画图工具画成表
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(visibleTasks, key = { it.id }) { task ->
+                            InspectionTaskCard(task)
+                        }
+                    }
+
                 }
             }
         }
@@ -102,7 +119,12 @@ fun InspectionTaskCard(task: InspectionTask) {
     Card(Modifier.fillMaxWidth().testTag("task_${task.id}")) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             // TODO 5：用Row组织名称和状态；名称用weight(1f)；下方显示编号和位置。
-            Text("待补全的任务卡片")
+            //Text("待补全的任务卡片")
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(task.deviceName, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+                Text(task.status, color = if (task.status == "已完成") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
+            }
+            Text("${task.id} · ${task.location}", style = MaterialTheme.typography.bodySmall)
         }
     }
 }
